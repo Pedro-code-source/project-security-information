@@ -1,0 +1,7 @@
+# Slide 5, etapa 2: Pré-commit (bloqueia antes do envio ao repositório)
+repos:
+  - repo: https://github.com/semgrep/pre-commit
+    rev: v1.100.0          # ajuste para a versão que você instalar
+    hooks:
+      - id: semgrep
+        args: ["--config", "rules/", "--error", "--skip-unknown-certs"]

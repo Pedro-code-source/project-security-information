@@ -1,0 +1,49 @@
+rules:
+  - id: demo.sql-concatenation-in-execute
+    languages: [python]
+    severity: ERROR
+    message: >
+      Entrada do usuário concatenada em consulta SQL. Use consultas
+      parametrizadas: cursor.execute("... WHERE name = ?", (name,))
+    metadata: {cwe: "CWE-89", owasp: "A03:2021 Injection"}
+    mode: taint
+    pattern-sources:
+      - pattern: request.args.get(...)
+    pattern-sinks:
+      - pattern: $CUR.execute($Q, ...)
+    pattern-sanitizers:
+      - pattern: int(...)
+
+  - id: demo.hardcoded-jwt-secret
+    languages: [python]
+    severity: ERROR
+    message: Segredo JWT hardcoded no código. Leia de variável de ambiente.
+    metadata: {cwe: "CWE-798"}
+    pattern: $APP.config["JWT_SECRET_KEY"] = "..."
+
+  - id: demo.hardcoded-api-key
+    languages: [python]
+    severity: WARNING
+    message: Possível chave de API hardcoded.
+    metadata: {cwe: "CWE-798"}
+    patterns:
+      - pattern: $VAR = "..."
+      - metavariable-regex:
+          metavariable: $VAR
+          regex: (?i)^[a-z_]*(api_key|secret|token)[a-z_]*$
+
+  - id: demo.flask-debug-true
+    languages: [python]
+    severity: ERROR
+    message: debug=True expõe o console Werkzeug (execução remota de código).
+    metadata: {cwe: "CWE-489"}
+    pattern: $APP.run(..., debug=True, ...)
+
+  # Regra de AUDITORIA (ampla de propósito): gera FALSO POSITIVO na rota
+  # /report/<int:year>, onde o Flask já converte o valor para int.
+  - id: demo.sql-fstring-audit
+    languages: [python]
+    severity: WARNING
+    message: SQL montado com f-string. Prefira consultas parametrizadas.
+    metadata: {cwe: "CWE-89", note: "regra de auditoria: pode gerar falso positivo"}
+    pattern: $CUR.execute(f"...")

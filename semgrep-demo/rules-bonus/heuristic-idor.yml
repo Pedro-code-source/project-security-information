@@ -1,0 +1,19 @@
+rules:
+  # BÔNUS: sinaliza o PADRÃO suspeito, mas não entende regra de negócio;
+  # apenas pede "confira". Fica fora de /rules de propósito (Caso 02 = 0 achados).
+  - id: demo.heuristic-possible-idor
+    languages: [python]
+    severity: INFO
+    message: >
+      Objeto buscado só por ID em rota autenticada. Confirme se há
+      verificação de propriedade (owner_id == usuário logado).
+    patterns:
+      - pattern-inside: |
+          @jwt_required(...)
+          def $F($ID):
+              ...
+      - pattern: $DOC = $M.query.get($ID)
+      - pattern-not-inside: |
+          $DOC = $M.query.get($ID)
+          ...
+          <... get_jwt_identity() ...>
